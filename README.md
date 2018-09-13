@@ -9,4 +9,4 @@
 
 下面的入口页面中颜色数组colors中只有我们需要的14种颜色定义,若是需要添加别的基准颜色或修改基准颜色值那pull下来改改页面中的colors数组.
 
-[入口]()
+[入口](https://liyongleihf2006.github.io/getSimilarColor/index.html)
