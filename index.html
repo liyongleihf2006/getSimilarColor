@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>getSimilarColor</title>
+    <style>
+        .color-item {
+            width: 200px;
+            display: inline-block;
+            border: 1px solid;
+            margin: 4px;
+        }
+
+        .color {
+            height: 40px;
+            border-bottom: 1px solid;
+        }
+    </style>
+    <script>
+        let colors = [{
+            name: "$color1",
+            value: "#ff8c42"
+        }, {
+            name: "$color2",
+            value: "#00b7ac"
+        }, {
+            name: "$color3",
+            value: "#FF5656"
+        }, {
+            name: "$color4",
+            value: "#00b246"
+        }, {
+            name: "$color5",
+            value: "#f1b14e"
+        }, {
+            name: "$color6",
+            value: "#A485F0"
+        }, {
+            name: "$color7",
+            value: "#333333"
+        }, {
+            name: "$color8",
+            value: "#666666"
+        }, {
+            name: "$color9",
+            value: "#000000"
+        }, {
+            name: "$color10",
+            value: "#bbbbbb"
+        }, {
+            name: "$color11",
+            value: "#dddddd"
+        }, {
+            name: "$color12",
+            value: "#f0f0f0"
+        }, {
+            name: "$color13",
+            value: "#f2f4f6"
+        }, {
+            name: "$color14",
+            value: "#FFFFFF"
+        }];
+    </script>
+</head>
+
+<body>
+    <form id="search">
+        <label><label>要查询的颜色</label><input name="color" /></label>
+        <input type="submit" value="筛选" />
+    </form>
+    <div class="color-item">
+        <div id="target-color" class="color"></div>
+        <span id="target-label"></span>
+    </div>
+    <hr/>
+    <div id="colors-container">
+
+    </div>
+    <script>
+        var container = document.querySelector("#colors-container");
+        //定义一个画布用来将颜色值转换为hsl格式
+        var canvas = document.createElement("canvas");
+        canvas.width = 1;
+        canvas.height = 1;
+        var content = canvas.getContext("2d");
+        document.querySelector("#search").addEventListener("submit", function (e) {
+            e.preventDefault();
+            var targetColor = this.color.value;
+            document.querySelector("#target-color").style.backgroundColor = targetColor;
+            document.querySelector("#target-label").innerHTML = targetColor;
+            getSimilarColor(targetColor);
+        })
+        //将数组中的颜色渲染到页面上面
+        renderColors();
+        //将_hsl属性赋予数组中的每一项上
+        initColors();
+        //将颜色数组根据颜色相近度进行排序
+        function getSimilarColor(color) {
+            var target_hsl = get_hsl(color);
+            colors = quickSort(colors,function(item){
+                return getDistance(target_hsl,item._hsl);
+            });
+            renderColors();
+        }
+        //获取两个颜色在hsl柱体上面的距离
+        function getDistance(target_hsl, hsl) {
+            var target_hsl_c = getCoordinate(target_hsl);
+            var { x, y, z } = getCoordinate(hsl);
+            return Math.sqrt(
+                Math.pow(target_hsl_c.x - x, 2) +
+                Math.pow(target_hsl_c.y - y, 2) +
+                Math.pow(target_hsl_c.z - z, 2)
+            )
+        }
+        //获取颜色在hsl柱体上面的坐标
+        function getCoordinate(hsl) {
+            var { h, s, l } = hsl;
+            var x = Math.cos(h / 360 * Math.PI) * s;
+            var y = Math.sin(h / 360 * Math.PI) * s;
+            var z = l;
+            return { x, y, z };
+        }
+        //渲染数组中的颜色
+        function renderColors() {
+            container.innerHTML = "";
+            colors.forEach((item) => {
+                var colorItem = document.createElement("div");
+                colorItem.classList.add("color-item");
+                container.appendChild(colorItem);
+
+                var color = document.createElement("div");
+                color.classList.add("color");
+                color.style.backgroundColor = item.value;
+                colorItem.appendChild(color);
+
+                var label = document.createElement("span");
+                label.innerHTML = item.name;
+                colorItem.appendChild(label);
+            });
+        }
+        //将_hsl属性赋予数组中的每一项
+        function initColors() {
+            colors.forEach(item => {
+                item._hsl = get_hsl(item.value);
+            });
+        }
+        //获取颜色的hsl
+        function get_hsl(color) {
+            content.fillStyle = color;
+            content.fillRect(0, 0, 1, 1);
+            var imgData = content.getImageData(0, 0, 1, 1);
+            var data = imgData.data;
+            var r = data[0] / 255,
+                g = data[1] / 255,
+                b = data[2] / 255,
+                a = data[3] / 255;
+            return transform_hsl(r, g, b);
+        }
+        //将颜色转换为hsl
+        function transform_hsl(r, g, b) {
+            var max = Math.max(r, g, b), min = Math.min(r, g, b);
+            var h, s, l = (max + min) / 2;
+            if (max == min) {
+                h = s = 0; // achromatic
+            } else {
+                var d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            h = Math.round(h * 360);
+            return { h, s, l };
+        }
+        //快排
+        function quickSort(arr,fn){
+            //如果数组<=1,则直接返回
+            if(arr.length<=1){return arr;}
+            var pivotIndex=Math.floor(arr.length/2);
+            //找基准，并把基准从原数组删除
+            var pivot=arr.splice(pivotIndex,1)[0];
+            //定义左右数组
+            var left=[];
+            var right=[];
+
+            //比基准小的放在left，比基准大的放在right
+            for(var i=0;i<arr.length;i++){
+                if(fn(arr[i])<=fn(pivot)){
+                    left.push(arr[i]);
+                }
+                else{
+                    right.push(arr[i]);
+                }
+            }
+            //递归
+            return quickSort(left,fn).concat([pivot],quickSort(right,fn));
+        }         
+    </script>
+</body>
+
+</html>
