@@ -138,7 +138,9 @@
                 color.classList.add("color");
                 color.style.backgroundColor = item.value;
                 colorItem.appendChild(color);
-
+                var valueItem = document.createElement("div");
+                valueItem.innerHTML = item.value;
+                colorItem.appendChild(valueItem);
                 var label = document.createElement("span");
                 label.innerHTML = item.name;
                 colorItem.appendChild(label);
