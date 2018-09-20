@@ -107,7 +107,67 @@
         }, {
             name: "$color14hover/$color14active",
             value: "#fefefe"
-        }];
+        }, {
+            name: "CCThemeRGBA($color1,.16)",
+            value: "#ff8c42",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color2,.16)",
+            value: "#00b7ac",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color3,.16)",
+            value: "#FF5656",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color4,.16)",
+            value: "#f9c069",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color5,.16)",
+            value: "#00b246",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color6,.16)",
+            value: "#A485F0",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color7,.16)",
+            value: "#333333",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color8,.16)",
+            value: "#666666",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color9,.16)",
+            value: "#000000",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color10,.16)",
+            value: "#bbbbbb",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color11,.16)",
+            value: "#dddddd",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color12,.16)",
+            value: "#f0f0f0",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color13,.16)",
+            value: "#f2f4f6",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color14,.16)",
+            value: "#FFFFFF",
+            opacity: .16
+        }, {
+            name: "CCThemeRGBA($color17,.16)",
+            value: "#999999",
+            opacity: .16
+        },];
     </script>
 </head>
 
@@ -120,7 +180,7 @@
         <div id="target-color" class="color"></div>
         <span id="target-label"></span>
     </div>
-    <hr/>
+    <hr />
     <div id="colors-container">
 
     </div>
@@ -138,15 +198,16 @@
             document.querySelector("#target-label").innerHTML = targetColor;
             getSimilarColor(targetColor);
         })
+        
+        //将_hsl和_hex属性赋予数组中的每一项上
+        initColors();
         //将数组中的颜色渲染到页面上面
         renderColors();
-        //将_hsl属性赋予数组中的每一项上
-        initColors();
         //将颜色数组根据颜色相近度进行排序
         function getSimilarColor(color) {
             var target_hsl = get_hsl(color);
-            colors = quickSort(colors,function(item){
-                return getDistance(target_hsl,item._hsl);
+            colors = quickSort(colors, function (item) {
+                return getDistance(target_hsl, item._hsl);
             });
             renderColors();
         }
@@ -178,11 +239,20 @@
 
                 var color = document.createElement("div");
                 color.classList.add("color");
-                color.style.backgroundColor = item.value;
+                color.style.backgroundColor = item._hex;
                 colorItem.appendChild(color);
                 var valueItem = document.createElement("div");
-                valueItem.innerHTML = item.value;
+                valueItem.innerHTML = "源色:"+item.value;
                 colorItem.appendChild(valueItem);
+
+                var opacityItem = document.createElement("div");
+                opacityItem.innerHTML = "透明度:"+(item.opacity||1);
+                colorItem.appendChild(opacityItem);
+
+                var valueItem2 = document.createElement("div");
+                valueItem2.innerHTML = "计算后的颜色:"+item._hex;
+                colorItem.appendChild(valueItem2);
+
                 var label = document.createElement("span");
                 label.innerHTML = item.name;
                 colorItem.appendChild(label);
@@ -191,23 +261,38 @@
         //将_hsl属性赋予数组中的每一项
         function initColors() {
             colors.forEach(item => {
-                item._hsl = get_hsl(item.value);
+                item._hsl = get_hsl(item.value,item.opacity);
+                const { h, s, l } = item._hsl;
+                const rgb = colorToRgb(`hsl(${h},${s*100}%,${l*100}%)`);
+                const [r,g,b]= rgb.replace(/[^\d,]/g,"").split(",");
+                item._hex = `#${formatNumber(new Number(r).toString(16))}${formatNumber(new Number(g).toString(16))}${formatNumber(new Number(b).toString(16))}`;
             });
         }
         //获取颜色的hsl
-        function get_hsl(color) {
-            content.fillStyle = color;
+        function get_hsl(color,opacity) {
+            content.globalAlpha = 1;
+            content.fillStyle = "#fff";
             content.fillRect(0, 0, 1, 1);
+
+            var canvas2 = document.createElement("canvas");
+            canvas2.width = 1;
+            canvas2.height = 1;
+            var ctx = canvas2.getContext("2d");
+            ctx.globalAlpha = opacity || 1;
+            ctx.fillStyle = color;
+            ctx.fillRect(0, 0, 1, 1);
+            content.drawImage(canvas2, 0, 0);
             var imgData = content.getImageData(0, 0, 1, 1);
             var data = imgData.data;
-            var r = data[0] / 255,
-                g = data[1] / 255,
-                b = data[2] / 255,
-                a = data[3] / 255;
+            var r = data[0],
+                g = data[1],
+                b = data[2];
+                console.log(opacity,data[3]);
             return transform_hsl(r, g, b);
         }
         //将颜色转换为hsl
         function transform_hsl(r, g, b) {
+            r /= 255, g /= 255, b /= 255;
             var max = Math.max(r, g, b), min = Math.min(r, g, b);
             var h, s, l = (max + min) / 2;
             if (max == min) {
@@ -226,28 +311,63 @@
             return { h, s, l };
         }
         //快排
-        function quickSort(arr,fn){
+        function quickSort(arr, fn) {
             //如果数组<=1,则直接返回
-            if(arr.length<=1){return arr;}
-            var pivotIndex=Math.floor(arr.length/2);
+            if (arr.length <= 1) { return arr; }
+            var pivotIndex = Math.floor(arr.length / 2);
             //找基准，并把基准从原数组删除
-            var pivot=arr.splice(pivotIndex,1)[0];
+            var pivot = arr.splice(pivotIndex, 1)[0];
             //定义左右数组
-            var left=[];
-            var right=[];
+            var left = [];
+            var right = [];
 
             //比基准小的放在left，比基准大的放在right
-            for(var i=0;i<arr.length;i++){
-                if(fn(arr[i])<=fn(pivot)){
+            for (var i = 0; i < arr.length; i++) {
+                if (fn(arr[i]) <= fn(pivot)) {
                     left.push(arr[i]);
                 }
-                else{
+                else {
                     right.push(arr[i]);
                 }
             }
             //递归
-            return quickSort(left,fn).concat([pivot],quickSort(right,fn));
-        }         
+            return quickSort(left, fn).concat([pivot], quickSort(right, fn));
+        }
+        function hslToRgb(h, s, l) {
+            var r, g, b;
+
+            if (s == 0) {
+                r = g = b = l; // achromatic
+            } else {
+                var hue2rgb = function hue2rgb(p, q, t) {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                }
+
+                var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                var p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+            }
+
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+        function colorToRgb(color) {
+            var div = document.createElement('div');
+            div.style.backgroundColor = color;
+            document.body.appendChild(div);
+            var c = window.getComputedStyle(div).backgroundColor;
+            document.body.removeChild(div);
+            return c;
+        };   
+        function formatNumber(value){
+            return value.length<2?"0"+value:value;
+        } 
     </script>
 </body>
 
