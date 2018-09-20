@@ -20,7 +20,7 @@
         }
     </style>
     <script>
-        let colors = [{
+        let originColors = [{
             name: "$color1",
             value: "#ff8c42"
         }, {
@@ -62,7 +62,8 @@
         }, {
             name: "$color14",
             value: "#FFFFFF"
-        }, {
+        }];
+        let specialColors = [ {
             name: "$color17",
             value: "#999999"
         }, {
@@ -107,67 +108,19 @@
         }, {
             name: "$color14hover/$color14active",
             value: "#fefefe"
-        }, {
-            name: "CCThemeRGBA($color1,.16)",
-            value: "#ff8c42",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color2,.16)",
-            value: "#00b7ac",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color3,.16)",
-            value: "#FF5656",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color4,.16)",
-            value: "#f9c069",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color5,.16)",
-            value: "#00b246",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color6,.16)",
-            value: "#A485F0",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color7,.16)",
-            value: "#333333",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color8,.16)",
-            value: "#666666",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color9,.16)",
-            value: "#000000",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color10,.16)",
-            value: "#bbbbbb",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color11,.16)",
-            value: "#dddddd",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color12,.16)",
-            value: "#f0f0f0",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color13,.16)",
-            value: "#f2f4f6",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color14,.16)",
-            value: "#FFFFFF",
-            opacity: .16
-        }, {
-            name: "CCThemeRGBA($color17,.16)",
-            value: "#999999",
-            opacity: .16
-        },];
+        }];
+        const colors = [].concat(originColors).concat(specialColors);
+        const opacitys = [.1,.16,.2,.25,.3];
+        originColors.forEach(originColor=>{
+            opacitys.forEach(opacity=>{
+                let newColor = {
+                    name:`CCThemeRGBA(${originColor.name},${opacity})`,
+                    value:originColor.value,
+                    opacity:opacity
+                };
+                colors.push(newColor);
+            });
+        });
     </script>
 </head>
 
