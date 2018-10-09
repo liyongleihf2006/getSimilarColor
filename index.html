@@ -162,8 +162,13 @@
         //将颜色数组根据颜色相近度进行排序
         function getSimilarColor(color) {
             var target_hsl = get_hsl(color);
-            colors = quickSort(colors, function (item) {
-                return getDistance(target_hsl, item._hsl);
+            colors = quickSort(colors, function (item,item2) {
+                var itemDistance = getDistance(target_hsl, item._hsl);
+                var item2Distance = getDistance(target_hsl, item2._hsl);
+                if(itemDistance===item2Distance){
+                    return item.name.length<item2.name.length;
+                }
+                return itemDistance<item2Distance;
             });
             renderColors();
         }
@@ -243,7 +248,6 @@
             var r = data[0],
                 g = data[1],
                 b = data[2];
-                console.log(opacity,data[3]);
             return transform_hsl(r, g, b);
         }
         //将颜色转换为hsl
@@ -279,7 +283,7 @@
 
             //比基准小的放在left，比基准大的放在right
             for (var i = 0; i < arr.length; i++) {
-                if (fn(arr[i]) <= fn(pivot)) {
+                if (fn(arr[i],pivot)) {
                     left.push(arr[i]);
                 }
                 else {
