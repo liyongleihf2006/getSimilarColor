@@ -20,7 +20,7 @@
         }
     </style>
     <script>
-        let originColors = [{
+        let originColors_popular = [{
             name: "$color1",
             value: "#ff8c42"
         }, {
@@ -63,13 +63,13 @@
             name: "$color14",
             value: "#FFFFFF"
         }, {
-            name: "$color18",
-            value: "#68A6F6"
-        }];
-        let specialColors = [ {
             name: "$color17",
             value: "#999999"
         }, {
+            name: "$color18",
+            value: "#68A6F6"
+        }];
+        let specialColors_popular = [{
             name: "$color1hover/$color1active",
             value: "#ff8b40"
         }, {
@@ -112,23 +112,137 @@
             name: "$color14hover/$color14active",
             value: "#fefefe"
         }];
-        let colors = [].concat(originColors).concat(specialColors);
-        const opacitys = [.1,.16,.2,.25,.3,.6];
-        originColors.forEach(originColor=>{
-            opacitys.forEach(opacity=>{
-                let newColor = {
-                    name:`CCThemeRGBA(${originColor.name},${opacity})`,
-                    value:originColor.value,
-                    opacity:opacity
-                };
-                colors.push(newColor);
+
+        let originColors_standrad = [{
+            name: "$color1",
+            value: "#68A6F6"
+        }, {
+            name: "$color2",
+            value: "#38D5B0"
+        }, {
+            name: "$color3",
+            value: "#FF948F"
+        }, {
+            name: "$color4",
+            value: "#F4CE65"
+        }, {
+            name: "$color5",
+            value: "#58C8D0"
+        }, {
+            name: "$color6",
+            value: "#BBA3F6"
+        }, {
+            name: "$color7",
+            value: "#333333"
+        }, {
+            name: "$color8",
+            value: "#666666"
+        }, {
+            name: "$color9",
+            value: "#000000"
+        }, {
+            name: "$color10",
+            value: "#bbbbbb"
+        }, {
+            name: "$color11",
+            value: "#dddddd"
+        }, {
+            name: "$color12",
+            value: "#E6EAF4"
+        }, {
+            name: "$color13",
+            value: "#F5F7FA"
+        }, {
+            name: "$color14",
+            value: "#FFFFFF"
+        }, {
+            name: "$color17",
+            value: "#999999"
+        }, {
+            name: "$color18",
+            value: "#68A6F6"
+        }];
+        let specialColors_standrad = [{
+            name: "$color1hover/$color1active",
+            value: "#67a5f6"
+        }, {
+            name: "$color2hover/$color2active",
+            value: "#37d5af"
+        }, {
+            name: "$color3hover/$color3active",
+            value: "#ff938d"
+        }, {
+            name: "$color4hover/$color4active",
+            value: "#f4ce64"
+        }, {
+            name: "$color5hover/$color5active",
+            value: "#57c8d0"
+        }, {
+            name: "$color6hover/$color6active",
+            value: "#baa2f6"
+        }, {
+            name: "$color7hover/$color7active",
+            value: "#323232"
+        }, {
+            name: "$color8hover/$color8active",
+            value: "#656565"
+        }, {
+            name: "$color9hover/$color9active",
+            value: "black"
+        }, {
+            name: "$color10hover/$color10active",
+            value: "#bababa"
+        }, {
+            name: "$color11hover/$color11active",
+            value: "gainsboro"
+        }, {
+            name: "$color12hover/$color12active",
+            value: "#e5e9f4"
+        }, {
+            name: "$color13hover/$color13active",
+            value: "#f4f6f9"
+        }, {
+            name: "$color14hover/$color14active",
+            value: "#fefefe"
+        }];
+
+        const opacitys = [.1, .16, .2, .25, .3, .6];
+        function generateColors(edition="popular"){
+            let originColors;
+            let specialColors;
+            switch(edition){
+                case "popular":
+                    originColors = originColors_popular;specialColors=specialColors_popular;
+                    break;
+                case "standrad":
+                    originColors = originColors_standrad;specialColors= specialColors_standrad;
+                    break;
+            }
+            let colors = [].concat(originColors).concat(specialColors);
+            originColors.forEach(originColor => {
+                opacitys.forEach(opacity => {
+                    let newColor = {
+                        name: `CCThemeRGBA(${originColor.name},${opacity})`,
+                        value: originColor.value,
+                        opacity: opacity
+                    };
+                    colors.push(newColor);
+                });
             });
-        });
+            return colors;
+        }
+        let colors = generateColors();
     </script>
 </head>
 
 <body>
     <form id="search">
+        <label><label>版本</label>
+            <select name="edition">
+                <option value="popular">普及版</option>
+                <option value="standrad">标准版</option>
+            </select>
+        </label>
         <label><label>要查询的颜色</label><input name="color" /></label>
         <input type="submit" value="筛选" />
     </form>
@@ -150,11 +264,15 @@
         document.querySelector("#search").addEventListener("submit", function (e) {
             e.preventDefault();
             var targetColor = this.color.value;
+            var edition = this.edition.value;
+            colors = generateColors(edition);
             document.querySelector("#target-color").style.backgroundColor = targetColor;
             document.querySelector("#target-label").innerHTML = targetColor;
+            //将_hsl和_hex属性赋予数组中的每一项上
+            initColors();
             getSimilarColor(targetColor);
         })
-        
+
         //将_hsl和_hex属性赋予数组中的每一项上
         initColors();
         //将数组中的颜色渲染到页面上面
@@ -162,13 +280,13 @@
         //将颜色数组根据颜色相近度进行排序
         function getSimilarColor(color) {
             var target_hsl = get_hsl(color);
-            colors = quickSort(colors, function (item,item2) {
+            colors = quickSort(colors, function (item, item2) {
                 var itemDistance = getDistance(target_hsl, item._hsl);
                 var item2Distance = getDistance(target_hsl, item2._hsl);
-                if(itemDistance===item2Distance){
-                    return item.name.length<item2.name.length;
+                if (itemDistance === item2Distance) {
+                    return item.name.length < item2.name.length;
                 }
-                return itemDistance<item2Distance;
+                return itemDistance < item2Distance;
             });
             renderColors();
         }
@@ -203,15 +321,15 @@
                 color.style.backgroundColor = item._hex;
                 colorItem.appendChild(color);
                 var valueItem = document.createElement("div");
-                valueItem.innerHTML = "源色:"+item.value;
+                valueItem.innerHTML = "源色:" + item.value;
                 colorItem.appendChild(valueItem);
 
                 var opacityItem = document.createElement("div");
-                opacityItem.innerHTML = "透明度:"+(item.opacity||1);
+                opacityItem.innerHTML = "透明度:" + (item.opacity || 1);
                 colorItem.appendChild(opacityItem);
 
                 var valueItem2 = document.createElement("div");
-                valueItem2.innerHTML = "计算后的颜色:"+item._hex;
+                valueItem2.innerHTML = "计算后的颜色:" + item._hex;
                 colorItem.appendChild(valueItem2);
 
                 var label = document.createElement("span");
@@ -222,15 +340,15 @@
         //将_hsl属性赋予数组中的每一项
         function initColors() {
             colors.forEach(item => {
-                item._hsl = get_hsl(item.value,item.opacity);
+                item._hsl = get_hsl(item.value, item.opacity);
                 const { h, s, l } = item._hsl;
-                const rgb = colorToRgb(`hsl(${h},${s*100}%,${l*100}%)`);
-                const [r,g,b]= rgb.replace(/[^\d,]/g,"").split(",");
+                const rgb = colorToRgb(`hsl(${h},${s * 100}%,${l * 100}%)`);
+                const [r, g, b] = rgb.replace(/[^\d,]/g, "").split(",");
                 item._hex = `#${formatNumber(new Number(r).toString(16))}${formatNumber(new Number(g).toString(16))}${formatNumber(new Number(b).toString(16))}`;
             });
         }
         //获取颜色的hsl
-        function get_hsl(color,opacity) {
+        function get_hsl(color, opacity) {
             content.globalAlpha = 1;
             content.fillStyle = "#fff";
             content.fillRect(0, 0, 1, 1);
@@ -283,7 +401,7 @@
 
             //比基准小的放在left，比基准大的放在right
             for (var i = 0; i < arr.length; i++) {
-                if (fn(arr[i],pivot)) {
+                if (fn(arr[i], pivot)) {
                     left.push(arr[i]);
                 }
                 else {
@@ -324,9 +442,9 @@
             var c = window.getComputedStyle(div).backgroundColor;
             document.body.removeChild(div);
             return c;
-        };   
-        function formatNumber(value){
-            return value.length<2?"0"+value:value;
+        };
+        function formatNumber(value) {
+            return value.length < 2 ? "0" + value : value;
         } 
     </script>
 </body>
